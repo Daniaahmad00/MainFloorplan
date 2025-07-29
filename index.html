@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Private Suite Occupancy Floorplan Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 p-4 font-sans">
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Left Panel -->
+    <div class="col-span-1 bg-white p-6 rounded-xl shadow">
+      <h1 class="text-3xl font-bold text-orange-600 mb-2">
+        PS Occupancy <span class="text-xl font-medium text-gray-600">(Floorplan)</span>
+      </h1>
+
+      <!-- Filters -->
+      <div class="space-y-4 mt-6">
+        <div>
+          <label class="block font-semibold mb-1">Outlet</label>
+          <select id="filter-outlet" class="w-full p-2 border rounded"></select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Status</label>
+          <select id="filter-status" class="w-full p-2 border rounded"></select>
+        </div>
+        <div>
+          <label class="block font-semibold mb-1">Pax Size</label>
+          <select id="filter-pax" class="w-full p-2 border rounded"></select>
+        </div>
+        <div> 
+          <label class="block font-semibold mb-1">Suite</label>
+          <select id="filter-suite" class="w-full p-2 border rounded"></select>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="mt-6">
+        <table class="w-full border text-sm">
+          <thead class="bg-gray-100 text-gray-700">
+            <tr>
+              <th class="text-left p-2">Metric</th>
+              <th class="text-right p-2">Total</th>
+            </tr>
+          </thead>
+          <tbody id="metrics-summary">
+            <tr><td class="p-2">Occupied</td><td class="p-2 text-right">0</td></tr>
+            <tr><td class="p-2">Available</td><td class="p-2 text-right">0</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Room Table -->
+      <div class="mt-6 text-sm">
+        <table class="w-full border">
+          <thead class="bg-gray-100 text-gray-700">
+            <tr>
+              <th class="text-left p-2">Room Name</th>
+              <th class="text-left p-2">Details</th>
+            </tr>
+          </thead>
+        </table>
+        <div id="details-body" class="max-h-64 overflow-y-auto border border-t-0">
+          <!-- Dynamic content -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Panel -->
+    <div class="col-span-2 bg-white p-6 rounded-xl shadow flex flex-col items-center">
+      <h2 class="text-2xl font-semibold mb-4">Outlet Floorplan</h2>
+      <iframe id="floor-img" src="" frameborder="0" class="border rounded shadow max-w-full h-auto w-full min-h-[800px]"></iframe>
+    </div>
+  </div>
+
+  <!-- Script -->
+  <script src="main.js"></script>
+</body>
+</html>
