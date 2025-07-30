@@ -57,10 +57,14 @@ function updateRooms(svgDoc) {
     const room = svgDoc.getElementById(id);
     if (room) {
       const status = roomData[id].status?.toLowerCase();
-      const fillColor = (status === 'available')
-       ? 'rgba(50, 185, 54, 0.85)' // Green
-      : 'rgba(235, 51, 38, 0.85)'; // Red for all others
+      const fillColor = status === 'available'
+        ? 'rgba(50, 185, 54, 0.85)'
+        : 'rgba(235, 51, 38, 0.85)';
+
+      // ✅ Set attributes required for postMessage selectors
       room.setAttribute('fill', fillColor);
+      room.setAttribute('data-room-id', id);
+      room.setAttribute('data-room-name', roomData[id].name || '');
       room.setAttribute('stroke', '#333');
       room.setAttribute('stroke-width', '1');
 
@@ -71,44 +75,67 @@ function updateRooms(svgDoc) {
       console.warn(`⚠️ Room ID not found in SVG: ${id}`);
     }
   });
+  // Notify parent that we're ready to receive filters
+  window.parent.postMessage("ready", "*");
 }
+
+
+
 // Receive filter commands from parent
-window.addEventListener('message', (event) => {
-  const { roomIds, statusMap, zoomTo } = event.data || {};
-  if (!roomIds || !statusMap) return;
+window.addEventListener("message", (event) => {
+  const {
+    roomIds = [],
+    statusMap = {},
+    paxSizeMap = {},
+    suiteName = null,
+    zoomTo = null
+  } = event.data || {};
 
-  const svgDoc = document.getElementById('8FAFloorplan')?.contentDocument;
-  if (!svgDoc) return;
+  console.log("📥 Received from parent:", roomIds, statusMap, paxSizeMap, suiteName, zoomTo);
+  
+    // fade all
+  document.querySelectorAll('svg [data-room-id]').forEach(el => {
+    el.style.fill = "";
+    el.style.opacity = "0.1";
+  });
 
-  // Loop all rooms
-  Object.keys(roomData).forEach(id => {
-    const room = svgDoc.getElementById(id);
-    if (!room) return;
-    if (!room) return;
-
-    if (roomIds.includes(id)) {
+  // highlight matching
+  roomIds.forEach(id => {
+    const el = document.querySelector(`[data-room-id="${id}"]`);
+    if (el) {
       const status = statusMap[id];
-      const fill = status === 'Available'
-        ? 'rgba(50,185,54,0.85)'    // green
-        : 'rgba(235,51,38,0.85)';   // red
+      const pax = paxSizeMap[id];
 
-      room.setAttribute('fill', fill);
-      room.style.opacity = '1';
-    } else {
-      room.setAttribute('fill', '#ccc');  // grey
-      room.style.opacity = '0.15';        // dim
+      // Get default fill from roomData fallback
+      let fillColor = "gray"; // fallback
+
+      if (status) {
+        fillColor = status.toLowerCase() === "available"
+          ? "rgba(50, 185, 54, 0.85)"
+          : "rgba(235, 51, 38, 0.85)";
+      } else if (roomData[id]?.status) {
+        const defaultStatus = roomData[id].status.toLowerCase();
+        fillColor = defaultStatus === "available"
+          ? "rgba(50, 185, 54, 0.85)"
+          : "rgba(235, 51, 38, 0.85)";
+      }
+
+      el.style.fill = fillColor;
+      el.style.opacity = "1";
+
+      // Optional: display pax info
+      el.setAttribute("data-pax", pax || "");
     }
   });
 
-  // Optional: Zoom to selected suite
+  // zoom
   if (zoomTo) {
-    const targetRoom = svgDoc.getElementById(zoomTo);
-    if (targetRoom && typeof targetRoom.scrollIntoView === 'function') {
-      targetRoom.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+    const target = document.querySelector(`[data-room-name="${zoomTo}"]`);
+    if (target && target.scrollIntoView) {
+      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
     }
   }
 });
-;
 
 //Show Popup Info
 function showPopup(event, roomId) {
