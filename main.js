@@ -12,12 +12,16 @@ const outletMap = {
   '66dfd21d5ec307e20a9b761c': 'UBP3A',
   '671f3dbf0951c4dfbaaadd5d': 'SV2'
 };
-
-const outletUrls = {
-  'ITG': 'https://itgfloorplan.netlify.app/',
-  '8FA': 'https://8fafloorplan.netlify.app/'
+const outletfile = {
+  '8FA': './8FA/index.html',
 };
-
+function updateFloorplanFrame() {
+  const selectedOutlet = document.getElementById('filter-outlet').value;
+  const frame = document.getElementById('floor-img');
+  if (outletfile[selectedOutlet]) {
+    frame.src = outletfile[selectedOutlet];
+  }
+}
 // Status grouping
 function GroupedStatus(status) {
   const available = ['available'];
@@ -131,45 +135,64 @@ function updateMetrics() {
     <tr><td>Available</td><td>${available}</td></tr>
   `;
 }
+let iframeReady = false;
+
+window.addEventListener("message", (event) => {
+  if (event.data === "ready") {
+    iframeReady = true;
+  }
+});
 
 function updateRoomTable() {
-  const outlet = document.getElementById('filter-outlet').value;
-  const status = document.getElementById('filter-status').value;
-  const pax = document.getElementById('filter-pax').value;
-  const suite = document.getElementById('filter-suite')?.value;
+  const selectedOutlet = document.getElementById('filter-outlet').value;
+  const selectedStatus = document.getElementById('filter-status').value;
+  const selectedPax = document.getElementById('filter-pax').value;
+  const selectedSuite = document.getElementById('filter-suite').value;
 
-  const filtered = roomData.filter(r =>
-    (!outlet || r.outlet === outlet) &&
-    (!status || r.status === status) &&
-    (!pax || r.capacity === pax) &&
-    (!suite || r.name === suite)
-  );
+  const floorIframe = document.getElementById('floor-img');
+  const outletURL = outletfile[selectedOutlet];
 
-  // Update floorplan iframe
-  const iframe = document.getElementById('floor-img');
-  iframe.src = outletUrls[outlet] || '';
-  console.log('🖼️ Floorplan iframe URL set to:', iframe.src);
+  // Filter the full roomData list (not undefined `rooms`)
+  const filteredRooms = roomData.filter(room => {
+    return (
+      (!selectedOutlet || room.outlet === selectedOutlet) &&
+      (!selectedStatus || room.status === selectedStatus) &&
+      (!selectedPax || room.capacity === selectedPax) &&
+      (!selectedSuite || room.name === selectedSuite)
+    );
+  });
 
-// Zoom to suite [debug]
-if (suite && outletUrls[outlet]) {
-  console.log('🔍 Zooming to suite:', suite);
-  setTimeout(() => {
-    iframe.contentWindow?.postMessage({ type: 'zoomToRoom', roomName: suite }, '*');
-    console.log('📩 postMessage sent:', { type: 'zoomToRoom', roomName: suite });
-  }, 500);
-} else {
-  console.log('ℹ️ No suite selected or outlet URL missing for zoom.');
-}
-  const tableBody = document.getElementById('details-body');
-  if (filtered.length === 0) {
-    tableBody.innerHTML = '<p class="p-4 text-gray-500">No rooms match your selected filters.</p>';
-    return;
+  // Only send message if iframe is loaded and filtered rooms are from the selected outlet
+  if (floorIframe.contentWindow && selectedOutlet) {
+    floorIframe.contentWindow.postMessage({
+      roomIds: filteredRooms.map(r => r.id),
+      statusMap: Object.fromEntries(filteredRooms.map(r => [r.id, r.status])),
+      zoomTo: selectedSuite || null
+    }, '*');
   }
 
+  // Load iframe URL if outlet changed
+  if (outletURL && floorIframe.src !== outletURL) {
+    iframeReady = false;
+    floorIframe.src = outletURL;
+
+    floorIframe.onload = () => {
+      setTimeout(() => {
+        floorIframe.contentWindow.postMessage({
+          roomIds: filteredRooms.map(r => r.id),
+          statusMap: Object.fromEntries(filteredRooms.map(r => [r.id, r.status])),
+          zoomTo: selectedSuite || null
+        }, '*');
+      }, 300);
+    };
+  }
+
+  // Room table update
+  const tableBody = document.getElementById('details-body');
   tableBody.innerHTML = `
     <table class="w-full text-sm text-left border border-gray-300">
       <tbody>
-        ${filtered.map(r => `
+        ${filteredRooms.map(r => `
           <tr class="hover:bg-gray-50">
             <td class="p-2 border font-semibold">${r.name}</td>
             <td class="p-2 border">
@@ -186,6 +209,9 @@ if (suite && outletUrls[outlet]) {
     </table>
   `;
 }
+
+
+
 
 // Setup event listeners
 document.addEventListener('DOMContentLoaded', () => {
