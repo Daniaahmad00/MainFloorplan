@@ -1,7 +1,7 @@
 let roomData = {};
 const object = document.getElementById('8FAFloorplan');
 const outletID = '67ad665a9aa9ef620e693aa0';
-const apiUrl = `https://script.google.com/macros/s/AKfycbxq5mOtzhtRcU_e99UG2Q8rXhOkbroXvP8eKE87GC8aLvrwf05EYLsv9cTXieXix0g0/exec?outlet_id=67ad665a9aa9ef620e693aa0`;
+const apiUrl = `https://script.google.com/macros/s/AKfycbyWrIrwH9WftJhKqv9l27lAgmZst85SBFtvJkjFqx-jblu2t1wNnc8fiVFt40Ju8Wv4/exec?outlet_id=67ad665a9aa9ef620e693aa0`;
 function convertSqmmToSqft(sqmm) {
 const sqft = parseFloat(sqmm) / 92903.04;
 return isNaN(sqft) ? '-' : sqft.toFixed(2) + ' sqft';
@@ -33,12 +33,10 @@ fetch(apiUrl)
 //  Setup SVG interactions
 function setupSVG() {
   const svgObject = document.getElementById('8FAFloorplan');
-
   if (!svgObject) {
-    console.warn('⚠️ SVG object not found.');
+    console.error("SVG object not found");
     return;
   }
-
   if (svgObject.contentDocument && svgObject.contentDocument.documentElement) {
     // SVG already loaded
     updateRooms(svgObject.contentDocument);
@@ -64,9 +62,10 @@ function updateRooms(svgDoc) {
       // ✅ Set attributes required for postMessage selectors
       room.setAttribute('fill', fillColor);
       room.setAttribute('data-room-id', id);
+      console.log(` Set SVG attributes for ${id}:`, roomData[id].name);
       room.setAttribute('data-room-name', roomData[id].name || '');
       room.setAttribute('stroke', '#333');
-      room.setAttribute('stroke-width', '1');
+      room.setAttribute('stroke-width', '2');
 
       room.addEventListener('click', (e) => showPopup(e, id));
       room.addEventListener('mouseover', () => room.setAttribute('fill-opacity', '1'));
@@ -82,60 +81,44 @@ function updateRooms(svgDoc) {
 
 
 // Receive filter commands from parent
-window.addEventListener("message", (event) => {
-  const {
-    roomIds = [],
-    statusMap = {},
-    paxSizeMap = {},
-    suiteName = null,
-    zoomTo = null
-  } = event.data || {};
-
-  console.log("📥 Received from parent:", roomIds, statusMap, paxSizeMap, suiteName, zoomTo);
+window.addEventListener('message', (event) => {
+  const data = event.data;
+  console.log("Received message from parent:", event.data);
   
-    // fade all
-  document.querySelectorAll('svg [data-room-id]').forEach(el => {
-    el.style.fill = "";
-    el.style.opacity = "0.1";
-  });
+  const { roomIds, statusMap, paxSizeMap, suiteName } = data;
 
-  // highlight matching
-  roomIds.forEach(id => {
-    const el = document.querySelector(`[data-room-id="${id}"]`);
-    if (el) {
-      const status = statusMap[id];
-      const pax = paxSizeMap[id];
+  allRooms.forEach(room => {
+    const roomId = room.id;
+    const status = statusMap[roomId];
+    const pax = paxSizeMap[roomId];
 
-      // Get default fill from roomData fallback
-      let fillColor = "gray"; // fallback
+    // Always reset display and fill
+    room.style.display = 'none';
+    room.removeAttribute('fill');
 
-      if (status) {
-        fillColor = status.toLowerCase() === "available"
-          ? "rgba(50, 185, 54, 0.85)"
-          : "rgba(235, 51, 38, 0.85)";
-      } else if (roomData[id]?.status) {
-        const defaultStatus = roomData[id].status.toLowerCase();
-        fillColor = defaultStatus === "available"
-          ? "rgba(50, 185, 54, 0.85)"
-          : "rgba(235, 51, 38, 0.85)";
+    // Zoom to suite only
+    if (suiteName && roomId === suiteName) {
+      room.style.display = 'block';
+      room.setAttribute('stroke', 'blue');
+      room.setAttribute('stroke-width', '3');
+      zoomToRoom(suiteName); // call your zoom function
+      return;
+    }
+
+    if (roomIds.includes(roomId)) {
+      room.style.display = 'block';
+
+      // Apply color based on status
+      if (status === "Available") {
+        room.setAttribute('fill', 'green');
+      } else if (status === "Occupied") {
+        room.setAttribute('fill', 'red');
       }
-
-      el.style.fill = fillColor;
-      el.style.opacity = "1";
-
-      // Optional: display pax info
-      el.setAttribute("data-pax", pax || "");
     }
   });
-
-  // zoom
-  if (zoomTo) {
-    const target = document.querySelector(`[data-room-name="${zoomTo}"]`);
-    if (target && target.scrollIntoView) {
-      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
-    }
-  }
 });
+
+
 
 //Show Popup Info
 function showPopup(event, roomId) {

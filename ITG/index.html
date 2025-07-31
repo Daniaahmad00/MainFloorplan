@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ITG Private Suite Floorplan</title>
+    <link rel="stylesheet" href="ITG.css">
+</head>
+<body>
+
+  <h1>ITG Floorplan</h1>
+
+  <div class="floorplan-container">
+<object id="ITGFloorplan" type="image/svg+xml" data="Floorplan ITG.svg" title="ITG Floorplan"></object>
+  </div>
+
+  <div id="popup" class="popup">
+    <span class="close-btn" onclick="closePopup()">&times;</span>
+    <h3 id="popupRoomName"></h3>
+    <p>Room Type: <span id="popupRoomType"></span></p>
+    <p>Status: <span id="popupStatus"></span></p> 
+    <p>Capacity: <span id="popupCapacity"></span> PAX</p>
+    <p>Area: <span id="popupArea"></span></p>
+    <p>Price: <span id="popupPrice"></span> </p>
+    <p>Deposit: <span id="popupDeposit"></span> </p>
+  </div>
+
+  <script src="ITGscript.js"></script>
+  <link rel="icon" href="data:,">
+
+</body>
+</html>
