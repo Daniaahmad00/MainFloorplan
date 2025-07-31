@@ -58,41 +58,36 @@ function populateFilters() {
   }
 }
 
-function updateFloorplanFrame() {
-  const selectedOutlet = document.getElementById("filter-outlet").value;
+// Send filters to child iframe
+function sendFiltersToChild() {
+  showSpinner();
   const frame = document.getElementById("floor-img");
-  if (outletfile[selectedOutlet]) frame.src = outletfile[selectedOutlet];
+  if (!frame || !frame.contentWindow) return;
+
+  const selectedOutlet = document.getElementById("filter-outlet").value;
+  const selectedStatus = (
+    document.getElementById("filter-status").value || "all"
+  ).toLowerCase();
+  const selectedPax = document.getElementById("filter-pax").value;
+  const selectedSuite = document.getElementById("filter-suite").value;
+
+  const filteredRooms = roomData.filter((room) => {
+    return (
+      (selectedOutlet === "all" || room.outlet === selectedOutlet) &&
+      (selectedPax === "all" || room.capacity == selectedPax) &&
+      (selectedSuite === "all" || room.name === selectedSuite)
+    );
+  });
+
+  const roomIds = filteredRooms.map((r) => r.id);
+  const statusMap = {};
+  filteredRooms.forEach((r) => (statusMap[r.id] = r.status));
+
+  frame.contentWindow.postMessage(
+    { roomIds, statusFilter: selectedStatus, statusMap },
+    "*"
+  );
 }
-// // Send filters to child iframe
-// function sendFiltersToChild() {
-//   showSpinner();
-//   const frame = document.getElementById("floor-img");
-//   if (!frame || !frame.contentWindow) return;
-
-//   const selectedOutlet = document.getElementById("filter-outlet").value;
-//   const selectedStatus = (
-//     document.getElementById("filter-status").value || "all"
-//   ).toLowerCase();
-//   const selectedPax = document.getElementById("filter-pax").value;
-//   const selectedSuite = document.getElementById("filter-suite").value;
-
-//   const filteredRooms = roomData.filter((room) => {
-//     return (
-//       (selectedOutlet === "all" || room.outlet === selectedOutlet) &&
-//       (selectedPax === "all" || room.capacity == selectedPax) &&
-//       (selectedSuite === "all" || room.name === selectedSuite)
-//     );
-//   });
-
-//   const roomIds = filteredRooms.map((r) => r.id);
-//   const statusMap = {};
-//   filteredRooms.forEach((r) => (statusMap[r.id] = r.status));
-
-//   frame.contentWindow.postMessage(
-//     { roomIds, statusFilter: selectedStatus, statusMap },
-//     "*"
-//   );
-// }
 
 // Listen for child ready or update
 window.addEventListener("message", (event) => {
