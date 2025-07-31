@@ -88,14 +88,7 @@
       <!-- Floorplan Iframe -->
       <div class="flex-1 relative">
         <iframe id="floor-img" src="8FA/index.html" frameborder="0"
-          class="w-full h-[calc(100vh-12rem)] rounded-b-2xl"></iframe>
-
-        <!-- Zoom Controls -->
-        <div class="absolute top-4 right-4 bg-white shadow-md rounded-lg flex flex-col overflow-hidden z-50">
-          <button id="zoom-in" class="px-3 py-2 border-b hover:bg-orange-500 hover:text-white">+</button>
-          <button id="zoom-out" class="px-3 py-2 border-b hover:bg-orange-500 hover:text-white">-</button>
-          <button id="reset" class="px-3 py-2 hover:bg-orange-500 hover:text-white">Reset</button>
-        </div>
+          class="w-full h-[calc(100vh-12rem)] rounded-b-2xl"></iframe>   
       </div>
     </div>
   </div>
@@ -111,87 +104,12 @@
     let isDragging = false;
     let startX, startY;
     let svgEl; // holds the <svg> element
-
-    function initPanZoom() {
-      const svgObj = document.getElementById("8FAFloorplan");
-
-      svgObj.addEventListener("load", () => {
-        const svgDoc = svgObj.contentDocument;
-        svgEl = svgDoc.documentElement;
-
-        svgEl.style.transformOrigin = "0 0";
-        svgEl.style.transformBox = "fill-box";
-        svgEl.style.cursor = "grab";
-
-        // Zoom by mouse wheel
-        svgDoc.addEventListener("wheel", (e) => {
-          e.preventDefault();
-          const zoomIntensity = 0.1;
-          const oldScale = scale;
-          scale += (e.deltaY < 0 ? zoomIntensity : -zoomIntensity);
-          scale = Math.min(Math.max(0.5, scale), 3); // clamp between 0.5x and 3x
-
-          // adjust pan so zoom focuses around cursor
-          const rect = svgEl.getBoundingClientRect();
-          const offsetX = e.clientX - rect.left;
-          const offsetY = e.clientY - rect.top;
-          panX -= (offsetX / oldScale - offsetX / scale);
-          panY -= (offsetY / oldScale - offsetY / scale);
-
-          applyTransform();
-        });
-
-        // Drag start
-        svgDoc.addEventListener("mousedown", (e) => {
-          isDragging = true;
-          svgEl.style.cursor = "grabbing";
-          startX = e.clientX - panX;
-          startY = e.clientY - panY;
-        });
-
-        // Drag move
-        svgDoc.addEventListener("mousemove", (e) => {
-          if (!isDragging) return;
-          panX = e.clientX - startX;
-          panY = e.clientY - startY;
-          applyTransform();
-        });
-
-        // Drag end
-        svgDoc.addEventListener("mouseup", () => {
-          isDragging = false;
-          svgEl.style.cursor = "grab";
-        });
-        svgDoc.addEventListener("mouseleave", () => {
-          isDragging = false;
-          svgEl.style.cursor = "grab";
-        });
-
-        // Zoom buttons
-        document.getElementById("zoom-in").addEventListener("click", () => {
-          scale = Math.min(scale + 0.2, 3);
-          applyTransform();
-        });
-        document.getElementById("zoom-out").addEventListener("click", () => {
-          scale = Math.max(scale - 0.2, 0.5);
-          applyTransform();
-        });
-        document.getElementById("reset").addEventListener("click", () => {
-          scale = 1;
-          panX = 0;
-          panY = 0;
-          applyTransform();
-        });
-      });
-    }
-
+ 
     function applyTransform() {
       if (!svgEl) return;
       svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
-
-    // Initialize pan + zoom
-    initPanZoom();
+ 
   </script>
 
 </body>
