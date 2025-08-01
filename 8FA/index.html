@@ -1,34 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>8FA Private Suite Floorplan</title>
-  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .floorplan-container {
+      position: relative;
+      max-width: 1200px;
+      margin: auto;
+      background: #fff;
+      border: 1px solid #ccc;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    object {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .popup {
+      position: absolute;
+      display: none;
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+      z-index: 1000;
+      font-size: 14px;
+    }
+
+    .popup h3 {
+      margin: 0 0 6px 0;
+      font-size: 15px;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 6px;
+      right: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+  </style>
 </head>
+
 <body>
-
-  <h1>8FA Floorplan</h1>
-
+  <h1 style="text-align:center;">8FA Floorplan</h1>
   <div class="floorplan-container">
-<object id="8FAFloorplan" data="8FA.svg" type="image/svg+xml" title="8FAFloorplanS"></object>
+    <object id="8FAFloorplan" data="8FA.svg" type="image/svg+xml"></object>
   </div>
-<div style="position: fixed; bottom: 1rem; right: 1rem; z-index: 10;">
-</div>
 
   <div id="popup" class="popup">
     <span class="close-btn" onclick="closePopup()">&times;</span>
     <h3 id="popupRoomName"></h3>
-    <p>Room Type: <span id="popupRoomType"></span></p>
-    <p>Status: <span id="popupStatus"></span></p> 
-    <p>Capacity: <span id="popupCapacity"></span> PAX</p>
-    <p>Area: <span id="popupArea"></span> sqft</p>
-    <p>Price: <span id="popupPrice"></span></p>
-    <p>Deposit: <span id="popupDeposit"></span></p>
+    <p>Status: <span id="popupStatus"></span></p>
   </div>
 
-  <script src="script.js"></script>
-  <link rel="icon" href="data:,">
-
+  <script src="Script.js"></script>
 </body>
+
 </html>

@@ -1,86 +1,117 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Private Suite Occupancy Floorplan Dashboard</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 text-gray-800 p-4 font-sans">
 
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<body class="bg-gray-100 text-gray-800 p-4 font-sans">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-4">
     <!-- Left Panel -->
-    <div class="col-span-1 bg-white p-6 rounded-xl shadow">
-      <h1 class="text-3xl font-bold text-orange-600 mb-2">
-        PS Occupancy <span class="text-xl font-medium text-gray-600">(Floorplan)</span>
+    <div class="col-span-1 bg-white p-6 rounded-2xl shadow-lg flex flex-col">
+      <h1 class="text-2xl md:text-3xl font-bold text-orange-600 mb-4">
+        PS Occupancy
+        <span class="block text-sm md:text-lg font-medium text-gray-500 mt-1">
+          Floorplan Dashboard
+        </span>
       </h1>
 
       <!-- Filters -->
-      <div class="space-y-4 mt-6">
+      <div class="space-y-4 mt-4 flex-1 overflow-auto">
         <div>
-          <label class="block font-semibold mb-1">Outlet</label>
-          <select id="filter-outlet" class="w-full p-2 border rounded"></select>
+          <label class="block font-semibold mb-1 text-gray-700">Outlet</label>
+          <select id="filter-outlet"
+            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </select>
         </div>
+
         <div>
-          <label class="block font-semibold mb-1">Status</label>
-          <select id="filter-status" class="w-full p-2 border rounded"></select>
+          <label class="block font-semibold mb-1 text-gray-700">Status</label>
+          <select id="filter-status"
+            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </select>
         </div>
+
         <div>
-          <label class="block font-semibold mb-1">Pax Size</label>
-          <select id="filter-pax" class="w-full p-2 border rounded"></select>
+          <label class="block font-semibold mb-1 text-gray-700">Pax Size</label>
+          <select id="filter-pax"
+            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </select>
         </div>
-        <div> 
-          <label class="block font-semibold mb-1">Suite</label>
-          <select id="filter-suite" class="w-full p-2 border rounded"></select>
+
+        <div>
+          <label class="block font-semibold mb-1 text-gray-700">Suite</label>
+          <select id="filter-suite"
+            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </select>
         </div>
       </div>
 
-      <!-- Metrics -->
-      <div class="mt-6">
-        <table class="w-full border text-sm">
-          <thead class="bg-gray-100 text-gray-700">
+      <!-- Summary -->
+      <div class="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
+        <h2 class="text-lg font-semibold text-gray-700 mb-2">Metrics</h2>
+        <table class="w-full text-sm">
+          <tbody id="metrics-summary" class="divide-y divide-gray-200">
             <tr>
-              <th class="text-left p-2">Metric</th>
-              <th class="text-right p-2">Total</th>
+              <td class="py-2 text-gray-600">Occupied</td>
+              <td class="py-2 text-right font-semibold text-red-600">0</td>
             </tr>
-          </thead>
-          <tbody id="metrics-summary">
-            <tr><td class="p-2">Occupied</td><td class="p-2 text-right">0</td></tr>
-            <tr><td class="p-2">Available</td><td class="p-2 text-right">0</td></tr>
+            <tr>
+              <td class="py-2 text-gray-600">Available</td>
+              <td class="py-2 text-right font-semibold text-green-600">0</td>
+            </tr>
           </tbody>
         </table>
-      </div>
-
-      <!-- Room Table -->
-      <div class="mt-6 text-sm">
-        <table class="w-full border">
-          <thead class="bg-gray-100 text-gray-700">
-            <tr>
-              <th class="text-left p-2">Room Name</th>
-              <th class="text-left p-2">Details</th>
-            </tr>
-          </thead>
-        </table>
-        <div id="details-body" class="max-h-64 overflow-y-auto border border-t-0">
-          <!-- Dynamic content -->
-        </div>
       </div>
     </div>
 
     <!-- Right Panel -->
-<div class="col-span-2 bg-white p-6 rounded-xl shadow flex flex-col items-center w-full h-full">
-  <div class="w-full h-[89vh] max-h-[95vh] overflow-auto rounded shadow">
-    <iframe 
-      id="floor-img" 
-      src="" 
-      frameborder="0" 
-      class="w-full h-full"
-    ></iframe>
-  </div>
-</div>
-</div>
+    <div class="col-span-2 bg-white rounded-2xl shadow-lg relative flex flex-col">
+      <!-- Loading Spinner -->
+      <div class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-90 z-50 hidden"
+        id="loading-spinner">
+        <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-orange-600 border-solid"></div>
+      </div>
 
-  <!-- Script -->
-  <script src="main.js"></script>
+      <!-- Header -->
+      <div class="p-4 border-b border-gray-200 flex justify-between items-center">
+        <h2 class="text-xl font-semibold text-gray-700">Floorplan View</h2>
+        <div class="space-x-2">
+          <button class="bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 text-sm">Download</button>
+          <button class="bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 text-sm">Refresh</button>
+        </div>
+      </div>
+
+      <!-- Floorplan Iframe -->
+      <div class="flex-1 relative">
+        <iframe id="floor-img" src="8FA/index.html" frameborder="0"
+          class="w-full h-[calc(100vh-12rem)] rounded-b-2xl"></iframe>   
+      </div>
+    </div>
+  </div>
+
+
+  <script src="main.js">
+  </script>
+
+  <script>
+    // Zoom & Drag Controls for SVG inside <object>
+    let scale = 1;
+    let panX = 0, panY = 0;
+    let isDragging = false;
+    let startX, startY;
+    let svgEl; // holds the <svg> element
+ 
+    function applyTransform() {
+      if (!svgEl) return;
+      svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+    }
+ 
+  </script>
+
 </body>
+
 </html>

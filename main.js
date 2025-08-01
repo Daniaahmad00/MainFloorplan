@@ -1,4 +1,3 @@
-// Mapping outlet IDs to names and URLs
 const outletMap = {
   '65e56bd7a24b74cef513834f': 'ITG',
   '67ad665a9aa9ef620e693aa0': '8FA',
@@ -31,11 +30,25 @@ function GroupedStatus(status) {
   if (occupied.includes(status.toLowerCase())) return 'Occupied';
   return 'Unknown';
 }
-//load meta
+
+
 let roomData = [];
-//fetching data from google sheet via API
+
+// Show spinner
+function showSpinner() {
+  document.getElementById("loading-spinner").classList.remove("hidden");
+}
+// Hide spinner
+function hideSpinner() {
+  document.getElementById("loading-spinner").classList.add("hidden");
+}
+
+// Fetch room data
 async function fetchData() {
-  const res = await fetch('https://script.google.com/macros/s/AKfycbyWrIrwH9WftJhKqv9l27lAgmZst85SBFtvJkjFqx-jblu2t1wNnc8fiVFt40Ju8Wv4/exec');
+  showSpinner();
+  const res = await fetch(
+    "https://script.google.com/macros/s/AKfycbyWrIrwH9WftJhKqv9l27lAgmZst85SBFtvJkjFqx-jblu2t1wNnc8fiVFt40Ju8Wv4/exec"
+  );
   const data = await res.json();
 //select used
   roomData = data.map(item => ({
@@ -48,19 +61,20 @@ async function fetchData() {
     capacity: String(item.capacity || '-'),
     area: item.area || '-',
     outlet: outletMap[item.outlet_id],
-    outlet_id: item.outlet_id
+    capacity: item.capacity,
   }));
-//declare of key functions
   populateFilters();
-  updateSuiteOptions(roomData);
-  updateMetrics();
-  updateRoomTable();
-  updatePaxOptions(roomData);
+  sendFiltersToChild();
 }
-//populating dropdown function to ALL
+
+// Populate dropdowns
 function populateFilters() {
-  const outletSet = new Set(), statusSet = new Set(), paxSet = new Set(), suiteSet = new Set();
-  roomData.forEach(r => {
+  const outletSet = new Set(),
+    statusSet = new Set(),
+    paxSet = new Set(),
+    suiteSet = new Set();
+
+  roomData.forEach((r) => {
     outletSet.add(r.outlet);
     statusSet.add(r.status);
     paxSet.add(r.capacity);
@@ -68,188 +82,72 @@ function populateFilters() {
   });
 
   const filterMap = {
-    'filter-outlet': outletSet,
-    'filter-status': statusSet,
-    'filter-pax': paxSet,
-    'filter-suite' : suiteSet
+    "filter-outlet": {
+      set: outletSet,
+      sortFn: (a, b) => a.localeCompare(b), // Alphabetical
+    },
+    "filter-status": {
+      set: statusSet,
+      sortFn: (a, b) => a.localeCompare(b), // Alphabetical
+    },
+    "filter-pax": {
+      set: paxSet,
+      sortFn: (a, b) => a - b, // Numeric
+    },
+    "filter-suite": {
+      set: suiteSet,
+      sortFn: (a, b) => a.localeCompare(b), // Alphabetical
+    },
   };
 
-  for (const [id, set] of Object.entries(filterMap)) {
+  for (const [id, { set, sortFn }] of Object.entries(filterMap)) {
     const select = document.getElementById(id);
-    select.innerHTML = '<option value="">All</option>' +
-      [...set].sort().map(val => `<option value="${val}">${val}</option>`).join('');  //dropdown reset inside the loop
-  }
-}
-//dropdown function for pax size
-function updatePaxOptions(filteredOutletData) {
-  const paxDropdown = document.getElementById('filter-pax');       
-  const currentValue = paxDropdown.value;  
-  const uniquePax = [...new Set(filteredOutletData.map(i => Number(i.capacity)))].sort((a, b) => a - b); //extract unique pax sizes only for current outlet  //sort ascending
-
-  paxDropdown.innerHTML = '<option value="">All</option>'; 
-  uniquePax.forEach(p => {
-    paxDropdown.innerHTML += `<option value="${p}">${p}</option>`;
-  });
-
-  if ([...paxDropdown.options].some(o => o.value === currentValue)) {
-    paxDropdown.value = currentValue;
+    select.innerHTML =
+      '<option value="all">All</option>' +
+      [...set]
+        .sort(sortFn)
+        .map((v) => `<option value="${v}">${v}</option>`)
+        .join("");
+    select.addEventListener("change", sendFiltersToChild);
   }
 }
 
-//dropdown funtion for suite
-function updateSuiteOptions(filteredData) {
-  const suiteDropdown = document.getElementById('filter-suite');
-  const selected = suiteDropdown.value;
+// Send filters to child iframe
+function sendFiltersToChild() {
+  showSpinner();
+  const frame = document.getElementById("floor-img");
+  if (!frame || !frame.contentWindow) return;
 
-  const roomNames = [...new Set(filteredData.map(r => r.name))].sort();
+  const selectedOutlet = document.getElementById("filter-outlet").value;
+  const selectedStatus = (
+    document.getElementById("filter-status").value || "all"
+  ).toLowerCase();
+  const selectedPax = document.getElementById("filter-pax").value;
+  const selectedSuite = document.getElementById("filter-suite").value;
 
-suiteDropdown.innerHTML = '<option value="">All</option>';
-roomNames.forEach(name => {
-  suiteDropdown.innerHTML += `<option value="${name}">${name}</option>`;
-});
-
-  if (roomNames.includes(selected)){
-    suiteDropdown.value =selected;
-  } else {
-    suiteDropdown.value = '';
-  }
-}
-
-function updateMetrics() {
-  const selectedOutlet = document.getElementById('filter-outlet').value;
-
-  if (!selectedOutlet) {
-    document.getElementById('metrics-summary').innerHTML = `
-      <tr><td>Occupied</td><td>0</td></tr>
-      <tr><td>Available</td><td>0</td></tr>
-    `;
-    return;
-  }
-
-  const filtered = roomData.filter(r => r.outlet === selectedOutlet);
-  const occupied = filtered.filter(r => r.status === 'Occupied').length;
-  const available = filtered.filter(r => r.status === 'Available').length;
-
-  document.getElementById('metrics-summary').innerHTML = `
-    <tr><td>Occupied</td><td>${occupied}</td></tr>
-    <tr><td>Available</td><td>${available}</td></tr>
-  `;
-}
-let iframeReady = false;
-
-window.addEventListener("message", (event) => {
-  if (event.data === "ready") {
-    iframeReady = true;
-  }
-});
-
-function updateRoomTable() {
-  const selectedOutlet = document.getElementById('filter-outlet').value;
-  const selectedStatus = document.getElementById('filter-status').value;
-  const selectedPax = document.getElementById('filter-pax').value;
-  const selectedSuite = document.getElementById('filter-suite').value;
-
-  const floorIframe = document.getElementById('floor-img');
-  const outletURL = outletfile[selectedOutlet];
-
-  // Filter rooms for table and messaging
-  const filteredRooms = roomData.filter(room => {
+  const filteredRooms = roomData.filter((room) => {
     return (
-      (!selectedOutlet || room.outlet === selectedOutlet) &&
-      (!selectedStatus || room.status === selectedStatus) &&
-      (!selectedPax || room.capacity === selectedPax) &&
-      (!selectedSuite || room.name === selectedSuite)
+      (selectedOutlet === "all" || room.outlet === selectedOutlet) &&
+      (selectedPax === "all" || room.capacity == selectedPax) &&
+      (selectedSuite === "all" || room.name === selectedSuite)
     );
   });
 
-  // Prepare message payload for iframe
-  const message = {
-    roomIds: filteredRooms.map(r => r.id),
-    statusMap: Object.fromEntries(filteredRooms.map(r => [r.id, r.status])),
-    paxSizeMap: Object.fromEntries(filteredRooms.map(r => [r.id, r.capacity])),
-    suiteName: selectedSuite || null,
-    zoomTo: selectedSuite || null
-  };
-console.log("📤 Sending postMessage to iframe:", {
-    roomIds: message.roomIds,
-    statusMap: message.statusMap,
-    paxSizeMap: message.paxSizeMap,
-    suiteName: message.suiteName,
-    zoomTo: message.zoomTo
-});
-  // Load floor plan if outlet changed
-  if (outletURL && floorIframe.src !== outletURL) {
-    iframeReady = false;
-    floorIframe.src = outletURL;
+  const roomIds = filteredRooms.map((r) => r.id);
+  const statusMap = {};
+  filteredRooms.forEach((r) => (statusMap[r.id] = r.status));
 
-    floorIframe.onload = () => {
-      const waitForReady = setInterval(() => {
-        if (iframeReady) {
-          clearInterval(waitForReady);
-          floorIframe.contentWindow.postMessage(message, '*');
-        }
-      }, 100);
-    };
-  } else if (floorIframe.contentWindow && iframeReady) {
-    // Send message if already loaded and ready
-    floorIframe.contentWindow.postMessage(message, '*');
-  }
-
-  // Room table update
-  const tableBody = document.getElementById('details-body');
-  tableBody.innerHTML = `
-    <table class="w-full text-sm text-left border border-gray-300">
-      <tbody>
-        ${filteredRooms.map(r => `
-          <tr class="hover:bg-gray-50">
-            <td class="p-2 border font-semibold">${r.name}</td>
-            <td class="p-2 border">
-              Type: ${r.type} <br>
-              Status: ${r.status} <br>
-              Pax: ${r.capacity} <br>
-              Area: ${r.area} sqft <br>
-              Price: RM ${r.price} <br>
-              Deposit: RM ${r.deposit}
-            </td>
-          </tr>
-        `).join('')}
-      </tbody>
-    </table>
-  `;
+  frame.contentWindow.postMessage(
+    { roomIds, statusFilter: selectedStatus, statusMap },
+    "*"
+  );
 }
 
-
-
-
-
-// Setup event listeners
-document.addEventListener('DOMContentLoaded', () => {
-  fetchData();
-
-  ['filter-outlet', 'filter-status', 'filter-pax', 'filter-suite'].forEach(id => {
-    document.getElementById(id)?.addEventListener('change', () => {
-      const selectedOutlet = document.getElementById('filter-outlet').value;
-      const selectedStatus = document.getElementById('filter-status').value;
-      const selectedPax = document.getElementById('filter-pax').value;
-
-      //pax slicer - filter based on outlet and status
-        const filteredForPax = roomData.filter(r =>
-        (!selectedOutlet || r.outlet === selectedOutlet) &&
-        (!selectedStatus || r.status === selectedStatus)
-      );
-      updatePaxOptions(filteredForPax);
-
-      //suite slicer & table
-      const filteredData = roomData.filter(r =>
-        (!selectedOutlet || r.outlet === selectedOutlet) &&
-        (!selectedStatus || r.status === selectedStatus) &&
-        (!selectedPax || r.capacity === selectedPax)
-      );
-     console.log(selectedOutlet)
-     console.log(selectedPax)
-      updateSuiteOptions(filteredData);
-      updateMetrics();
-      updateRoomTable();
-    });
-  });
+// Listen for child ready or update
+window.addEventListener("message", (event) => {
+  if (event.data === "ready" || event.data === "applied") {
+    hideSpinner();
+  }
 });
+
+fetchData();
