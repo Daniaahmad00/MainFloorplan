@@ -1,17 +1,16 @@
 const outletMap = {
-  "65e56bd7a24b74cef513834f": "ITG",
-  "67ad665a9aa9ef620e693aa0": "8FA",
-  "565748274a955c790d808c77": "UBP",
-  "5dac63c998e930010a595016": "KLG",
-  "5db8fb7e35798d0010950a77": "TTDI",
-  "5db8fb9798549f0010df15f3": "STO",
-  "62a9832b43c9f437e373e9dd": "KLS",
-  "63f5de531f29f60007ca8209": "MUB",
-  "6537957cc3653d2412ab4d7e": "SPM",
-  "66dfd21d5ec307e20a9b761c": "UBP3A",
-  "671f3dbf0951c4dfbaaadd5d": "SV2",
-};
-
+  "8FA" : {id: '67ad665a9aa9ef620e693aa0', svg: '8FA.svg'},
+  "ITG" : {id: '65e56bd7a24b74cef513834f', svg: 'ITG.svg'},
+  "UBP" : {id: '565748274a955c790d808c77', svg: 'UBP.svg'},
+  "KLG" : {id: '5dac63c998e930010a595016', svg: 'KLG.svg'},
+  "TTDI" : {id: '5db8fb7e35798d0010950a77', svg: ['TTDI-Level1.svg', 'TTDI-Level3A.svg']},
+  "STO" : {id: '5db8fb9798549f0010df15f3', svg: ['STO-Level11.svg', 'STO-Level12.svg', 'STO-Level14.svg']},
+  "KLS" : {id: '62a9832b43c9f437e373e9dd', svg: ['KLS-L20.svg', 'KLS-ByteDance.svg', 'KLS-L21.svg', 'KLS-L28.svg']},
+  "MUB" : {id: '63f5de531f29f60007ca8209', svg: ['MUB-level9.svg', 'MUB-level12.svg', 'MUB-level17.svg']},
+  "SPM" : {id: '6537957cc3653d2412ab4d7e', svg: "SPM.svg"},
+  "UBP3A" : {id: '66dfd21d5ec307e20a9b761c', svg: ['UBP-L13A.svg', 'UBP-L13AAIRIT.svg']},
+  "SV2" : {id: '671f3dbf0951c4dfbaaadd5d', svg: "SV2.svg "},
+}
 
 let roomData = [];
 
