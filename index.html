@@ -23,50 +23,64 @@
       <div class="space-y-4 mt-4 flex-1 overflow-auto">
         <div>
           <label class="block font-semibold mb-1 text-gray-700">Outlet</label>
-          <select id="filter-outlet"
-            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <select id="filter-outlet" class="w-full p-2 border rounded">
+            <option value="">Select Outlet</option> <!-- Default option -->
           </select>
         </div>
 
         <div>
           <label class="block font-semibold mb-1 text-gray-700">Status</label>
-          <select id="filter-status"
-            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <select id="filter-status" class="w-full p-2 border rounded">
+            <option value="">Select Status</option>
           </select>
         </div>
 
         <div>
           <label class="block font-semibold mb-1 text-gray-700">Pax Size</label>
-          <select id="filter-pax"
-            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <select id="filter-pax" class="w-full p-2 border rounded">
+            <option value="">Select Pax Size</option>
           </select>
         </div>
 
         <div>
           <label class="block font-semibold mb-1 text-gray-700">Suite</label>
-          <select id="filter-suite"
-            class="w-full p-3 border border-gray-200 rounded-xl bg-gray-50 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <select id="filter-suite" class="w-full p-2 border rounded">
+            <option value="">Select Suite</option>
           </select>
         </div>
       </div>
 
-      <!-- Summary -->
-      <div class="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
-        <h2 class="text-lg font-semibold text-gray-700 mb-2">Metrics</h2>
-        <table class="w-full text-sm">
-          <tbody id="metrics-summary" class="divide-y divide-gray-200">
-            <tr>
-              <td class="py-2 text-gray-600">Occupied</td>
-              <td class="py-2 text-right font-semibold text-red-600">0</td>
-            </tr>
-            <tr>
-              <td class="py-2 text-gray-600">Available</td>
-              <td class="py-2 text-right font-semibold text-green-600">0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <!-- Metric Table -->
+ <div class="mt-4 bg-gray-50 rounded-xl border border-gray-200 p-4">
+  <h2 class="text-lg font-semibold text-gray-700 mb-2">Metrics</h2>
+  <table class="w-full text-sm">
+    <tbody id="metrics-summary" class="divide-y divide-gray-200">
+      <tr>
+        <td class="py-2 text-gray-600">Occupied</td>
+        <td class="py-2 text-right font-semibold text-red-600">0</td>
+      </tr>
+      <tr>
+        <td class="py-2 text-gray-600">Available</td>
+        <td class="py-2 text-right font-semibold text-green-600">0</td>
+      </tr>
+    </tbody>
+  </table>
+</div
+      <!-- Room Table -->
+  <div class="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
+    <table class="w-full border">
+      <thead class="bg-gray-100 text-gray-700">
+        <tr>
+          <th class="text-left p-2">Room Name</th>
+          <th class="text-left p-2">Details</th>
+        </tr>
+      </thead>
+    </table>
+    <div id="details-body" class="max-h-64 overflow-y-auto border border-t-0">
+      <!-- Dynamic content -->
     </div>
+  </div>
+</div>
 
     <!-- Right Panel -->
     <div class="col-span-2 bg-white rounded-2xl shadow-lg relative flex flex-col">
@@ -84,15 +98,11 @@
           <button class="bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 text-sm">Refresh</button>
         </div>
       </div>
-
-      <!-- Floorplan Iframe -->
-      <div class="flex-1 relative">
-        <iframe id="floor-img" src="8FA/index.html" frameborder="0"
-          class="w-full h-[calc(100vh-12rem)] rounded-b-2xl"></iframe>   
-      </div>
-    </div>
-  </div>
-
+      
+<div class="floorplan-container">
+  <object id="svgViewer" type="image/svg+xml" data=""
+    class="w-full h-[calc(100vh-12rem)] rounded-b-2xl"></object>
+</div>
 
   <script src="main.js">
   </script>
@@ -103,11 +113,11 @@
     let panX = 0, panY = 0;
     let isDragging = false;
     let startX, startY;
-    let svgEl; // holds the <svg> element
+    let svgViewer; // holds the <svg> element
  
     function applyTransform() {
-      if (!svgEl) return;
-      svgEl.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
+      if (!svgViewer) return;
+      svgViewer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
  
   </script>

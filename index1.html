@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>8FA Private Suite Floorplan</title>
+  <title>Private Suite Floorplan</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -56,9 +56,13 @@
 </head>
 
 <body>
-  <h1 style="text-align:center;">8FA Floorplan</h1>
+  <h1 style="text-align:center;">Private Suite Floorplan</h1>
+  <div id ="levelSelector">
+    <label for="floorDropdown"><strong>Select Floor:</strong></label>
+    <select id="floorDropdown"></select>
+  </div>
   <div class="floorplan-container">
-    <object id="8FAFloorplan" data="8FA.svg" type="image/svg+xml"></object>
+    <object id="svgViewer" type="image/svg+xml" data=""></object>
   </div>
 
   <div id="popup" class="popup">
