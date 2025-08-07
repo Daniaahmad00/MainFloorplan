@@ -1,42 +1,49 @@
 const outletMap = {
-  "8FA":
+  "8FA": [
    { id: '67ad665a9aa9ef620e693aa0', 
-    svg: '8FA.svg' },
-  "ITG": {
-     id: '65e56bd7a24b74cef513834f', 
-     svg: 'ITG.svg' },
-  "UBP": { 
-    id: '565748274a955c790d808c77', 
-    svg: 'UBP.svg' },
-  "KLG": { 
-    id: '5dac63c998e930010a595016', 
-    svg: 'KLG.svg' },
-  "TTDI": { 
-    id: '5db8fb7e35798d0010950a77', 
-    svg: ['TTDI-Level1.svg', 'TTDI-Level3A.svg'] },
-  "STO": { 
-    id: '5db8fb9798549f0010df15f3', 
-    svg: ['STO-Level11.svg', 'STO-Level12.svg', 'STO-Level14.svg'] },
-  "KLS": { 
-    id: '62a9832b43c9f437e373e9dd', 
-    svg: ['KLS-L20.svg', 'KLS-ByteDance.svg', 'KLS-L21.svg', 'KLS-L28.svg'] },
-  "MUB": { 
-    id: '63f5de531f29f60007ca8209', 
-    svg: ['MUB-level9.svg', 'MUB-level12.svg', 'MUB-level17.svg'] },
-  "SPM": { 
-    id: '6537957cc3653d2412ab4d7e', 
-    svg: 'SPM.svg' },
-  "UBP3A": { 
-    id: '66dfd21d5ec307e20a9b761c', 
-    svg: ['UBP-L13A.svg', 'UBP-L13AAIRIT.svg'] },
-  "SV2": { 
-    id: '671f3dbf0951c4dfbaaadd5d', 
-    svg: 'SV2.svg' },
+    svg: 'SVG-file/8FA.svg' }
+  ],
+  "ITG": [
+     { id: '65e56bd7a24b74cef513834f', 
+     svg: 'SVG-file/ITG.svg' }
+  ],
+  "UBP": [{
+    id: '565748274a955c790d808c77',
+    svg: 'SVG-file/UBP.svg'
+  }],
+  "KLG": [{
+    id: '5dac63c998e930010a595016',
+    svg: 'SVG-file/KLG.svg'
+  }],
+  "TTDI": [{
+    id: '5db8fb7e35798d0010950a77',
+    svg: ['SVG-file/TTDI-Level1.svg', 'SVG-file/TTDI-Level3A.svg']
+  }],
+  "STO": [{
+    id: '5db8fb9798549f0010df15f3',
+    svg: ['SVG-file/STO-Level11.svg', 'SVG-file/STO-Level12.svg', 'SVG-file/STO-Level14.svg']
+  }],
+  "KLS": [{
+    id: '62a9832b43c9f437e373e9dd',
+    svg: ['SVG-file/KLS-L20.svg', 'SVG-file/KLS-ByteDance.svg', 'SVG-file/KLS-L21.svg', 'SVG-file/KLS-L28.svg']
+  }],
+  "MUB": [{
+    id: '63f5de531f29f60007ca8209',
+    svg: ['SVG-file/MUB-level9.svg', 'SVG-file/MUB-level12.svg', 'SVG-file/MUB-level17.svg']
+  }],
+  "SPM": [{
+    id: '6537957cc3653d2412ab4d7e',
+    svg: 'SVG-file/SPM.svg'
+  }],
+  "UBP3A": [{
+    id: '66dfd21d5ec307e20a9b761c',
+    svg: ['SVG-file/UBP-L13A.svg', 'SVG-file/UBP-L13AAIRIT.svg']
+  }],
+  "SV2": [{
+    id: '671f3dbf0951c4dfbaaadd5d',
+    svg: 'SVG-file/SV2.svg'
+  }],
 };
-let selectedOutlet = "8FA"; // Default outlet
-let currentSvgIndex = 0; // Track current SVG index for multi-file outlets  
-
-let roomData = [];
 
 // Utility: show/hide spinner
 function showSpinner() {
@@ -59,6 +66,7 @@ function GroupedStatus(status) {
 }
 
 // Fetch and prepare data
+let roomData = [];
 async function fetchData() {
   showSpinner();
   const res = await fetch(
@@ -76,9 +84,8 @@ async function fetchData() {
     area: item.area,
     capacity: item.capacity,
     outlet: item.outlet_id,  // keep the code instead of mapped object
-    outlet_id: outletMap[item.outlet_id]?.id || '-',
   }));
-
+console.log("Fetched room data:", roomData);
   populateFilters();
   sendFiltersToChild();
   hideSpinner();
@@ -92,11 +99,17 @@ function populateFilters() {
     suiteSet = new Set();
 
   roomData.forEach((r) => {
-    outletSet.add(r.outlet);
-    statusSet.add(r.status);
-    paxSet.add(r.capacity);
-    suiteSet.add(r.name);
-  });
+  const outletName = Object.entries(outletMap).find(
+    ([key, val]) => val[0].id === r.outlet
+  )?.[0];
+  if (outletName) outletSet.add(outletName);
+  statusSet.add(r.status);
+  paxSet.add(r.capacity);
+  suiteSet.add(r.name);
+});
+
+  console.log(outletSet,"outletSet")
+ 
 
   const filterMap = {
     "filter-outlet": {
@@ -110,7 +123,7 @@ function populateFilters() {
     "filter-pax": {
       set: paxSet,
       sortFn: (a, b) => a - b,
-    },
+    }, //pax dropdown show blank and 0
     "filter-suite": {
       set: suiteSet,
       sortFn: (a, b) => a.localeCompare(b),
@@ -134,11 +147,14 @@ function sendFiltersToChild() {
   if (!frame || !frame.contentWindow) return;
 
   const selectedOutlet = document.getElementById("filter-outlet")?.value || "all";
+
+  console.log("selectedOutlet",selectedOutlet)
   const selectedStatus = document.getElementById("filter-status")?.value.toLowerCase() || "all";
   const selectedPax = document.getElementById("filter-pax")?.value || "all";
   const selectedSuite = document.getElementById("filter-suite")?.value || "all";
 
   const filteredRooms = roomData.filter((room) => {
+    console.log(`Filtering room: ${room.name}, Outlet: ${room.outlet}, Status: ${room.status}, Pax: ${room.capacity}`);
     return (
       (selectedOutlet === "all" || room.outlet === selectedOutlet) &&
       (selectedStatus === "all" || room.status.toLowerCase() === selectedStatus) &&
@@ -155,13 +171,21 @@ function sendFiltersToChild() {
     { roomIds, statusFilter: selectedStatus, statusMap },
     "*"
   );
+  console.log("Message sent to child:", {
+  roomIds,
+  statusFilter: selectedStatus,
+  statusMap,
+  selectedOutlet
+});
 }
 
 // Receive message from iframe
 window.addEventListener("message", (event) => {
   if (event.data === "ready" || event.data === "applied") {
     hideSpinner();
+
   }
+  
 });
 
 // Start

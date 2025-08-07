@@ -94,8 +94,12 @@
       <div class="p-4 border-b border-gray-200 flex justify-between items-center">
         <h2 class="text-xl font-semibold text-gray-700">Floorplan View</h2>
         <div class="space-x-2">
-          <button class="bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 text-sm">Download</button>
-          <button class="bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 text-sm">Refresh</button>
+          <button id="download-btn" class="bg-orange-500 text-white px-3 py-1.5 rounded-lg hover:bg-orange-600 text-sm">
+            Download
+          </button>
+          <button id="refresh-btn" class="bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200 text-sm">
+            Refresh
+          </button>
         </div>
       </div>
       
@@ -119,6 +123,41 @@
       if (!svgViewer) return;
       svgViewer.style.transform = `translate(${panX}px, ${panY}px) scale(${scale})`;
     }
+
+     // Replace with your actual iframe ID if different
+  const iframe = document.getElementById('floorplan-iframe');
+
+  // Refresh button logic
+  document.getElementById('refresh-btn').addEventListener('click', () => {
+    // Reload iframe content
+    iframe.contentWindow.location.reload();
+  });
+
+  // Download button logic
+  document.getElementById('download-btn').addEventListener('click', () => {
+    const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+    const svg = iframeDoc.querySelector("svg");
+
+    if (!svg) {
+      alert("SVG not loaded yet.");
+      return;
+    }
+
+    // Clone and serialize SVG
+    const svgClone = svg.cloneNode(true);
+    const serializer = new XMLSerializer();
+    const svgBlob = new Blob([serializer.serializeToString(svgClone)], { type: "image/svg+xml" });
+    const url = URL.createObjectURL(svgBlob);
+
+    // Trigger download
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "floorplan.svg";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
  
   </script>
 

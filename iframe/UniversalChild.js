@@ -1,77 +1,52 @@
-function GroupedStatus(status) {
-  switch (status.toLowerCase()) {
-    case 'available':
-      return 'Available';
-    case 'available_soon':
-      return 'Occupied';
-    case 'occupied':
-      return 'Occupied';
-    case 'reserved':
-      return 'Occupied';
-    case 'unavailable':
-      return 'Occupied';
-    default:
-      return 'Unknown';
-  }
-}
+// UniversalChild.js
+let selectedOutletKey = null;
+let currentSvgIndex = 0;  
+let svgViewer = document.getElementById("selectedOutlet");
+
 let roomData = {};
 const statusColors = {
   Available: "rgba(50, 185, 54, 0.85)", // Green
   Occupied: "rgba(235, 51, 38, 0.85)", // Red
 };
-const outletMap = {
-  "8FA" : {
-    id: '67ad665a9aa9ef620e693aa0', 
-    svg: '8FA.svg'},
-  "ITG" : {
-    id: '65e56bd7a24b74cef513834f', 
-    svg: 'ITG.svg'},
-  "UBP" : {
-    id: '565748274a955c790d808c77', 
-    svg: 'UBP.svg'},
-  "KLG" : {
-    id: '5dac63c998e930010a595016', 
-    svg: 'KLG.svg'},
-  "TTDI" : {
-    id: '5db8fb7e35798d0010950a77', 
-    svg: ['TTDI-Level1.svg', 'TTDI-Level3A.svg']},
-  "STO" : {
-    id: '5db8fb9798549f0010df15f3', 
-    svg: ['STO-Level11.svg', 'STO-Level12.svg', 'STO-Level14.svg']},
-  "KLS" : {
-    id: '62a9832b43c9f437e373e9dd', 
-    svg: ['KLS-L20.svg', 'KLS-ByteDance.svg', 'KLS-L21.svg', 'KLS-L28.svg']},
-  "MUB" : {
-    id: '63f5de531f29f60007ca8209', 
-    svg: ['MUB-level9.svg', 'MUB-level12.svg', 'MUB-level17.svg']},
-  "SPM" : {
-    id: '6537957cc3653d2412ab4d7e', 
-    svg: 'SPM.svg'},
-  "UBP3A" : {
-    id: '66dfd21d5ec307e20a9b761c', 
-    svg: ['UBP-L13A.svg', 'UBP-L13AAIRIT.svg']},
-  "SV2" : {
-    id: '671f3dbf0951c4dfbaaadd5d', 
-    svg: 'SV2.svg'},
-}
-let selectedOutlet = "8FA"; // Default outlet
-let currentSvgIndex = 0; // Track current SVG index for multi-file outlets
+const outlets = [
+  { name: "8FA", id: "67ad665a9aa9ef620e693aa0", svg: "SVG-file/8FA.svg" },
+  { name: "ITG", id: "65e56bd7a24b74cef513834f", svg: "SVG-file/ITG.svg" },
+  { name: "UBP", id: "565748274a955c790d808c77", svg: "SVG-file/UBP.svg" },
+  { name: "KLG", id: "5dac63c998e930010a595016", svg: "SVG-file/KLG.svg" },
+  { name: "TTDI", id: "5db8fb7e35798d0010950a77", svg: ["SVG-file/TTDI-Level1.svg", "SVG-file/TTDI-Level3A.svg"] },
+  { name: "STO", id: "5db8fb9798549f0010df15f3", svg: ["SVG-file/STO-Level11.svg", "SVG-file/STO-Level12.svg", "SVG-file/STO-Level14.svg"] },
+  { name: "KLS", id: "62a9832b43c9f437e373e9dd", svg: ["SVG-file/KLS-L20.svg", "SVG-file/KLS-ByteDance.svg", "SVG-file/KLS-L21.svg", "SVG-file/KLS-L28.svg"] },
+  { name: "MUB", id: "63f5de531f29f60007ca8209", svg: ["SVG-file/MUB-level9.svg", "SVG-file/MUB-level12.svg", "SVG-file/MUB-level17.svg"] },
+  { name: "SPM", id: "6537957cc3653d2412ab4d7e", svg: "SVG-file/SPM.svg" },
+  { name: "UBP3A", id: "66dfd21d5ec307e20a9b761c", svg: ["SVG-file/UBP-L13A.svg", "SVG-file/UBP-L13AAIRIT.svg"] },
+  { name: "SV2", id: "671f3dbf0951c4dfbaaadd5d", svg: "SVG-file/SV2.svg" }
+];
 
+// Group statuses
+  function GroupedStatus(status) {
+  const available = ['available'];
+  const occupied = ['available_soon', 'reserved', 'occupied', 'unavailable'];
+
+  if (available.includes(status.toLowerCase())) return 'Available';
+  if (occupied.includes(status.toLowerCase())) return 'Occupied';
+  return 'Unknown';
+}
 // Load outlet info from parent
-window.addEventListener("message", (event) => {
+window.addEventListener("message", (event) => { 
   if (event.data?.selectedOutletKey) {
     selectedOutletKey = event.data.selectedOutletKey;
     currentSvgIndex = 0;
-    const outlet = outletMap[selectedOutletKey];
 
     // Load first floor by default
+    const outlet = outletMap[selectedOutletKey];
     const svgFile = Array.isArray(outlet.svg) ? outlet.svg[0] : outlet.svg;
-    svgViewer.setAttribute("data", svgFile);
+    svgViewer.setAttribute("data", svgFile); //triggers the floorplan to display
 
     // Populate level selector if available
     populateFloorSelector(selectedOutletKey);
+
     // Update room data
-    fetch(`https://script.google.com/macros/s/AKfycbxq5mOtzhtRcU_e99UG2Q8rXhOkbroXvP8eKE87GC8aLvrwf05EYLsv9cTXieXix0g0/exec?outlet_id=${outletMap.id}`)
+    fetch(`https://script.google.com/macros/s/AKfycbxq5mOtzhtRcU_e99UG2Q8rXhOkbroXvP8eKE87GC8aLvrwf05EYLsv9cTXieXix0g0/exec?outlet_id=${outlet.id}`)
     .then((r) => r.json())
     .then((data) => {
       data.forEach((item) => {
@@ -86,6 +61,7 @@ window.addEventListener("message", (event) => {
         deposit: item.deposit,
           };
         });
+        console.log("Room data loaded:", roomData);
         setupSVG();
       });
   }
@@ -96,6 +72,7 @@ window.addEventListener("message", (event) => {
   const sqft = parseFloat(sqmm) / 92903.04;
   return isNaN(sqft) ? '-' : sqft.toFixed(2) + ' sqft';
   }
+
   function setupSVG() {
     const svgObj = document.getElementById("selectedOutlet");
   svgObj.addEventListener("load", () => {
@@ -199,6 +176,7 @@ window.addEventListener("message", (event) => {
     statusFilter = "all",
     statusMap = {},
   } = event.data || {};
+   console.log("Received message in child:", event.data);
 
   const svgDoc = svgViewer?.contentDocument;
   if (!svgDoc) return;
