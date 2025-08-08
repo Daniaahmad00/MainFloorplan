@@ -51,21 +51,26 @@
       </div>
 
       <!-- Metric Table -->
- <div class="mt-4 bg-gray-50 rounded-xl border border-gray-200 p-4">
+<div class="mt-4 bg-gray-50 rounded-xl border border-gray-200 p-4">
   <h2 class="text-lg font-semibold text-gray-700 mb-2">Metrics</h2>
   <table class="w-full text-sm">
-    <tbody id="metrics-summary" class="divide-y divide-gray-200">
+    <tbody class="divide-y divide-gray-200">
       <tr>
         <td class="py-2 text-gray-600">Occupied</td>
-        <td class="py-2 text-right font-semibold text-red-600">0</td>
+        <td class="py-2 text-right font-semibold text-red-600">
+          <span id="metric-occupied">0</span>
+        </td>
       </tr>
       <tr>
         <td class="py-2 text-gray-600">Available</td>
-        <td class="py-2 text-right font-semibold text-green-600">0</td>
+        <td class="py-2 text-right font-semibold text-green-600">
+          <span id="metric-available">0</span>
+        </td>
       </tr>
     </tbody>
   </table>
-</div
+</div>
+
       <!-- Room Table -->
   <div class="mt-6 bg-gray-50 rounded-xl border border-gray-200 p-4">
     <table class="w-full border">

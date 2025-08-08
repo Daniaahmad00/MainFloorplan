@@ -89,27 +89,58 @@ console.log("Fetched room data:", roomData);
   populateFilters();
   sendFiltersToChild();
   hideSpinner();
+  updateMetrics();
+  updateRoomTable();
 }
 
 // Populate dropdowns dynamically
 function populateFilters() {
-  const outletSet = new Set(),
-    statusSet = new Set(),
-    paxSet = new Set(),
-    suiteSet = new Set();
+  const selectedOutlet = document.getElementById('filter-outlet').value;
+  const selectedStatus = document.getElementById('filter-status').value;
+  const selectedPax = document.getElementById('filter-pax').value;
+
+  const selectedOutletId = outletMap[selectedOutlet]?.[0]?.id || "";
+
+  // Filter data based on current dropdown values
+  let filtered = roomData;
+
+  if (selectedOutletId) {
+    filtered = filtered.filter(r => r.outlet === selectedOutletId);
+  }
+
+  if (selectedStatus) {
+    filtered = filtered.filter(r => r.status === selectedStatus);
+  }
+
+  if (selectedPax) {
+    filtered = filtered.filter(r => r.capacity === Number(selectedPax));
+  }
+
+  // Build new filtered sets
+  const outletSet = new Set();
+  const statusSet = new Set();
+  const paxSet = new Set();
+  const suiteSet = new Set();
 
   roomData.forEach((r) => {
-  const outletName = Object.entries(outletMap).find(
-    ([key, val]) => val[0].id === r.outlet
-  )?.[0];
-  if (outletName) outletSet.add(outletName);
-  statusSet.add(r.status);
-  paxSet.add(r.capacity);
-  suiteSet.add(r.name);
-});
+    const outletName = Object.entries(outletMap).find(
+      ([key, val]) => val[0].id === r.outlet
+    )?.[0];
+    if (outletName) outletSet.add(outletName);
+  });
 
-  console.log(outletSet,"outletSet")
- 
+  filtered.forEach((r) => {
+    statusSet.add(r.status);
+    paxSet.add(r.capacity);
+    suiteSet.add(r.name);
+  });
+
+  const defaultOptionLabels = {
+    "filter-outlet": "Select Outlet",
+    "filter-status": "Select Status",
+    "filter-pax": "Select Pax Size",
+    "filter-suite": "Select Suite",
+  };
 
   const filterMap = {
     "filter-outlet": {
@@ -123,22 +154,36 @@ function populateFilters() {
     "filter-pax": {
       set: paxSet,
       sortFn: (a, b) => a - b,
-    }, //pax dropdown show blank and 0
+    },
     "filter-suite": {
       set: suiteSet,
       sortFn: (a, b) => a.localeCompare(b),
     },
   };
-for (const [id, { set, sortFn }] of Object.entries(filterMap)) {
-  const select = document.getElementById(id);
-  if (!select) continue;
 
-  select.innerHTML = [...set]
-    .sort(sortFn)
-    .map((val) => `<option value="${val}">${val}</option>`)
-    .join('');
+  function populateDropdown(id, set, sortFn) {
+    const select = document.getElementById(id);
+    const currentValue = select.value;
+    const defaultLabel = defaultOptionLabels[id] || "Select";
+
+    select.innerHTML =
+      `<option value="">${defaultLabel}</option>` +
+      [...set]
+        .sort(sortFn)
+        .map((val) => `<option value="${val}">${val}</option>`)
+        .join('');
+
+    // Restore selection if still available
+    if (set.has(currentValue)) {
+      select.value = currentValue;
+    }
+  }
+
+  for (const [id, { set, sortFn }] of Object.entries(filterMap)) {
+    populateDropdown(id, set, sortFn);
+  }
 }
-}
+
 
 // Send filtered data to child iframe
 function sendFiltersToChild() {
@@ -146,7 +191,7 @@ function sendFiltersToChild() {
   const frame = document.getElementById("floor-img");
   if (!frame || !frame.contentWindow) return;
 
-  const selectedOutlet = document.getElementById("filter-outlet")?.value || "all";
+  const selectedOutletId = outletMap[selectedOutlet]?.[0]?.id || "all";
 
   console.log("selectedOutlet",selectedOutlet)
   const selectedStatus = document.getElementById("filter-status")?.value.toLowerCase() || "all";
@@ -156,7 +201,7 @@ function sendFiltersToChild() {
   const filteredRooms = roomData.filter((room) => {
     console.log(`Filtering room: ${room.name}, Outlet: ${room.outlet}, Status: ${room.status}, Pax: ${room.capacity}`);
     return (
-      (selectedOutlet === "all" || room.outlet === selectedOutlet) &&
+      (selectedOutlet === "all" || room.outlet === selectedOutletId) &&
       (selectedStatus === "all" || room.status.toLowerCase() === selectedStatus) &&
       (selectedPax === "all" || room.capacity == selectedPax) &&
       (selectedSuite === "all" || room.name === selectedSuite)
@@ -178,6 +223,95 @@ function sendFiltersToChild() {
   selectedOutlet
 });
 }
+document.getElementById('filter-outlet').addEventListener('change', () => {
+  populateFilters();
+  updateRoomTable();
+});
+
+document.getElementById('filter-status').addEventListener('change', () => {
+  populateFilters();
+  updateRoomTable();
+});
+
+document.getElementById('filter-pax').addEventListener('change', () => {
+  populateFilters();
+  updateRoomTable();
+});
+
+document.getElementById('filter-suite').addEventListener('change', () => {
+  updateRoomTable();
+});
+
+document.getElementById('filter-pax').addEventListener('change', () => {
+  populateFilters();
+  updateRoomTable();
+});
+
+document.getElementById('filter-suite').addEventListener('change', () => {
+  updateRoomTable();
+});
+
+
+function updateMetrics() {
+  const selectedOutlet = document.getElementById('filter-outlet').value;
+
+  let occupied = 0;
+  let available = 0;
+
+  if (selectedOutlet) {
+    const filtered = roomData.filter(r => r.outlet === selectedOutlet);
+    occupied = filtered.filter(r => r.status === 'Occupied').length;
+    available = filtered.filter(r => r.status === 'Available').length;
+  }
+
+  document.getElementById('metric-occupied').textContent = occupied;
+  document.getElementById('metric-available').textContent = available;
+}
+
+
+function updateRoomTable() {
+  const selectedOutlet = document.getElementById('filter-outlet').value;
+  const selectedStatus = document.getElementById('filter-status').value;
+  const selectedPax = document.getElementById('filter-pax').value;
+  const selectedSuite = document.getElementById('filter-suite').value;
+
+  const floorIframe = document.getElementById('floor-img');
+  const selectedOutletId = outletMap[selectedOutlet]?.[0]?.id || "";
+  const selectedPaxNum = selectedPax ? Number(selectedPax) : "";
+
+  const filteredRooms = roomData.filter(room => {
+    return (
+      (!selectedOutlet || room.outlet === selectedOutletId) &&
+      (!selectedStatus || room.status === selectedStatus) &&
+      (!selectedPax || room.capacity === selectedPaxNum) &&
+      (!selectedSuite || room.name === selectedSuite)
+    );
+  });
+
+  // Room table update
+  const tableBody = document.getElementById('details-body');
+  tableBody.innerHTML = `
+    <table class="w-full text-sm text-left border border-gray-300">
+      <tbody>
+        ${filteredRooms.map(r => `
+          <tr class="hover:bg-gray-50">
+            <td class="p-2 border font-semibold">${r.name}</td>
+            <td class="p-2 border">
+              Type: ${r.type} <br>
+              Status: ${r.status} <br>
+              Pax: ${r.capacity} <br>
+              Area: ${r.area} sqft <br>
+              Price: RM ${r.price} <br>
+              Deposit: RM ${r.deposit}
+            </td>
+          </tr>
+        `).join('')}
+      </tbody>
+    </table>
+  `;
+}
+
+
 
 // Receive message from iframe
 window.addEventListener("message", (event) => {
